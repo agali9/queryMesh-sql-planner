@@ -1,0 +1,80 @@
+server:
+  port: 8080
+
+spring:
+  application:
+    name: distributed-sql-planner
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,metrics,prometheus,info
+  metrics:
+    tags:
+      application: ${spring.application.name}
+
+dsqp:
+  backends:
+    - id: backend-a
+      name: PostgreSQL A
+      jdbc-url: jdbc:postgresql://localhost:5432/shard_a
+      username: dsqp
+      password: dsqp
+      pool-size: 10
+    - id: backend-b
+      name: PostgreSQL B
+      jdbc-url: jdbc:postgresql://localhost:5433/shard_b
+      username: dsqp
+      password: dsqp
+      pool-size: 10
+    - id: backend-c
+      name: PostgreSQL C
+      jdbc-url: jdbc:postgresql://localhost:5434/shard_c
+      username: dsqp
+      password: dsqp
+      pool-size: 10
+  catalog:
+    tables:
+      users:
+        backend-id: backend-a
+        columns: [id, name, email, region_id, created_at]
+      regions:
+        backend-id: backend-a
+        columns: [id, name, country]
+      orders:
+        backend-id: backend-b
+        columns: [id, user_id, product_id, quantity, total, order_date]
+      products:
+        backend-id: backend-b
+        columns: [id, name, category_id, price, sku]
+      categories:
+        backend-id: backend-b
+        columns: [id, name, description]
+      inventory:
+        backend-id: backend-c
+        columns: [id, product_id, warehouse_id, quantity, last_updated]
+      warehouses:
+        backend-id: backend-c
+        columns: [id, name, location, capacity]
+      shipments:
+        backend-id: backend-c
+        columns: [id, order_id, warehouse_id, status, shipped_at]
+      reviews:
+        backend-id: backend-a
+        columns: [id, product_id, user_id, rating, comment, created_at]
+      payments:
+        backend-id: backend-b
+        columns: [id, order_id, amount, method, status, paid_at]
+  execution:
+    query-timeout-ms: 30000
+    fetch-size: 256
+    parallel-backend-fetch: true
+    failure-mode: PARTIAL_RESULTS
+    retry-attempts: 2
+    retry-backoff-ms: 100
+
+logging:
+  level:
+    com.dsqp: INFO
+    com.dsqp.execution: DEBUG
