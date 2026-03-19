@@ -1,0 +1,23 @@
+server:
+  port: 8080
+
+dsqp:
+  backends:
+    - id: backend-a
+      name: PostgreSQL A
+      jdbc-url: jdbc:postgresql://postgres-a:5432/shard_a
+      username: dsqp
+      password: dsqp
+      pool-size: 10
+    - id: backend-b
+      name: PostgreSQL B
+      jdbc-url: jdbc:postgresql://postgres-b:5432/shard_b
+      username: dsqp
+      password: dsqp
+      pool-size: 10
+    - id: backend-c
+      name: PostgreSQL C
+      jdbc-url: jdbc:postgresql://postgres-c:5432/shard_c
+      username: dsqp
+      password: dsqp
+      pool-size: 10

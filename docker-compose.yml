@@ -1,0 +1,66 @@
+version: "3.9"
+
+services:
+  postgres-a:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_DB: shard_a
+      POSTGRES_USER: dsqp
+      POSTGRES_PASSWORD: dsqp
+    ports:
+      - "5432:5432"
+    volumes:
+      - ./docker/init-shard-a.sql:/docker-entrypoint-initdb.d/init.sql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U dsqp -d shard_a"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+
+  postgres-b:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_DB: shard_b
+      POSTGRES_USER: dsqp
+      POSTGRES_PASSWORD: dsqp
+    ports:
+      - "5433:5432"
+    volumes:
+      - ./docker/init-shard-b.sql:/docker-entrypoint-initdb.d/init.sql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U dsqp -d shard_b"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+
+  postgres-c:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_DB: shard_c
+      POSTGRES_USER: dsqp
+      POSTGRES_PASSWORD: dsqp
+    ports:
+      - "5434:5432"
+    volumes:
+      - ./docker/init-shard-c.sql:/docker-entrypoint-initdb.d/init.sql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U dsqp -d shard_c"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    ports:
+      - "8080:8080"
+    depends_on:
+      postgres-a:
+        condition: service_healthy
+      postgres-b:
+        condition: service_healthy
+      postgres-c:
+        condition: service_healthy
+    environment:
+      SPRING_PROFILES_ACTIVE: docker
